@@ -6,7 +6,7 @@
 const API_KEY = "efed3dfa3c5266c2d9d7b240bd31f487";
 
 const API_URL =
-    'https://api.openweathermap.org/data/2.5/weather';
+    'https://api.openweathermap.org/data/k2.5/weather';
 
 
 // ============================================
