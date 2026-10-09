@@ -1,167 +1,68 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>App del Clima</title>
-
     <link rel="stylesheet" href="estilos.css">
 </head>
-
 <body>
 
     <header>
-
-        <img
-            src="img/banner.png"
-            alt="Banner de la App del Clima"
-            class="banner"
-        >
+        <img src="img/banner.png" alt="Banner del clima"
+             class="banner"
+             onerror="this.style.display='none'">
 
         <div class="titulo">
-
             <div class="icono-titulo">☀️</div>
-
             <h1>App del Clima</h1>
-
-            <p>
-                Consultando APIs en tiempo real
-            </p>
-
+            <p>Consultando APIs en tiempo real</p>
         </div>
-
     </header>
 
-
     <main>
-
-        <!-- BUSCADOR -->
-
         <section class="panel-controles">
-
             <form id="formulario" class="buscador">
-
-                <input
-                    type="text"
-                    id="inputCiudad"
-                    placeholder="Escribe una ciudad..."
-                    autocomplete="off"
-                    required
-                >
-
-                <button type="submit">
-                    🔎 Consultar
-                </button>
-
+                <input type="text" id="inputCiudad"
+                       placeholder="Escribe una ciudad..."
+                       autocomplete="off" required>
+                <button type="submit">🔎 Consultar</button>
             </form>
 
-
-            <!-- RETO 1 Y RETO 4 -->
-
             <div class="botones-extra">
-
-                <button
-                    type="button"
-                    id="btnUbicacion"
-                >
+                <button type="button" id="btnUbicacion">
                     📍 Mi ubicación
                 </button>
-
-
-                <button
-                    type="button"
-                    id="btnTema"
-                >
+                <button type="button" id="btnTema">
                     🌙 Modo oscuro
                 </button>
-
             </div>
-
         </section>
 
-
-        <!-- ESTADO -->
-
-        <p id="estado" class="estado">
-            Escribe una ciudad y presiona "Consultar".
+        <p id="estado" class="estado" role="status">
+            Escribe una ciudad y presiona Consultar.
         </p>
 
+        <section id="resultado" class="resultado" hidden></section>
 
-        <!-- CLIMA ACTUAL -->
-
-        <section
-            id="resultado"
-            class="resultado"
-            hidden
-        >
+        <section id="pronostico" class="pronostico" hidden>
+            <h2>📅 Pronóstico de 5 días</h2>
+            <div id="tarjetasPronostico"
+                 class="tarjetas-pronostico"></div>
         </section>
 
-
-        <!-- RETO 2 -->
-
-        <section
-            id="pronostico"
-            class="pronostico"
-            hidden
-        >
-
-            <h2>
-                📅 Pronóstico de 5 días
-            </h2>
-
-            <div
-                id="tarjetasPronostico"
-                class="tarjetas-pronostico"
-            >
-            </div>
-
+        <section id="seccionHistorial" class="historial" hidden>
+            <h2>🕘 Últimas búsquedas</h2>
+            <div id="historialBotones"
+                 class="historial-botones"></div>
         </section>
-
-
-        <!-- RETO 3 -->
-
-        <section
-            id="seccionHistorial"
-            class="historial"
-            hidden
-        >
-
-            <h2>
-                🕘 Últimas búsquedas
-            </h2>
-
-            <div
-                id="historialBotones"
-                class="historial-botones"
-            >
-            </div>
-
-        </section>
-
     </main>
 
-
     <footer>
-
-        <p>
-            © 2026 - App del Clima
-        </p>
-
-        <p>
-            Datos de OpenWeatherMap
-        </p>
-
-        <p>
-            Banner diseñado en Canva
-        </p>
-
+        <p>© 2026 - App del Clima</p>
+        <p>Datos de OpenWeatherMap</p>
     </footer>
 
-
     <script src="script.js"></script>
-
 </body>
-
 </html>
