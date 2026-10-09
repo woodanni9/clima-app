@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>App del Clima - API</title>
+    <title>App del Clima</title>
 
     <link rel="stylesheet" href="estilos.css">
 </head>
@@ -20,36 +20,125 @@
             class="banner"
         >
 
-        <h1>🌤️ App del Clima</h1>
+        <div class="titulo">
 
-        <p>
-            Consulta el clima en tiempo real de cualquier ciudad
-        </p>
+            <div class="icono-titulo">☀️</div>
+
+            <h1>App del Clima</h1>
+
+            <p>
+                Consultando APIs en tiempo real
+            </p>
+
+        </div>
 
     </header>
 
 
     <main>
 
-        <form id="formulario" class="buscador">
+        <!-- BUSCADOR -->
 
-            <input
-                type="text"
-                id="inputCiudad"
-                placeholder="Escribe una ciudad..."
-                required
+        <section class="panel-controles">
+
+            <form id="formulario" class="buscador">
+
+                <input
+                    type="text"
+                    id="inputCiudad"
+                    placeholder="Escribe una ciudad..."
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit">
+                    🔎 Consultar
+                </button>
+
+            </form>
+
+
+            <!-- RETO 1 Y RETO 4 -->
+
+            <div class="botones-extra">
+
+                <button
+                    type="button"
+                    id="btnUbicacion"
+                >
+                    📍 Mi ubicación
+                </button>
+
+
+                <button
+                    type="button"
+                    id="btnTema"
+                >
+                    🌙 Modo oscuro
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ESTADO -->
+
+        <p id="estado" class="estado">
+            Escribe una ciudad y presiona "Consultar".
+        </p>
+
+
+        <!-- CLIMA ACTUAL -->
+
+        <section
+            id="resultado"
+            class="resultado"
+            hidden
+        >
+        </section>
+
+
+        <!-- RETO 2 -->
+
+        <section
+            id="pronostico"
+            class="pronostico"
+            hidden
+        >
+
+            <h2>
+                📅 Pronóstico de 5 días
+            </h2>
+
+            <div
+                id="tarjetasPronostico"
+                class="tarjetas-pronostico"
             >
+            </div>
 
-            <button type="submit">
-                🔍 Consultar
-            </button>
-
-        </form>
+        </section>
 
 
-        <div id="resultado" class="resultado"></div>
+        <!-- RETO 3 -->
 
-        <p id="estado"></p>
+        <section
+            id="seccionHistorial"
+            class="historial"
+            hidden
+        >
+
+            <h2>
+                🕘 Últimas búsquedas
+            </h2>
+
+            <div
+                id="historialBotones"
+                class="historial-botones"
+            >
+            </div>
+
+        </section>
 
     </main>
 
@@ -57,11 +146,15 @@
     <footer>
 
         <p>
-            © 2026 - App del Clima | Datos de OpenWeatherMap
+            © 2026 - App del Clima
         </p>
 
         <p>
-            Banner diseñado en Canva 🎨
+            Datos de OpenWeatherMap
+        </p>
+
+        <p>
+            Banner diseñado en Canva
         </p>
 
     </footer>
