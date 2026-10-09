@@ -1,829 +1,426 @@
-// ============================================
+// ==========================================
 // CONFIGURACIÓN
-// ============================================
+// ==========================================
 
-// PEGA AQUÍ TU API KE
-const API_KEY = 'efed3dfa3c5266c2d9d7b240bd31f487';
+// Escribe aquí tu API Key nueva, sin compartirla.
+const API_KEY = "efed3dfa3c5266c2d9d7b240bd31f487";
 
 const API_URL =
-    'https://api.openweathermap.org/data/k2.5/weather';
+    "https://api.openweathermap.org/data/2.5/weather";
 
+const FORECAST_URL =
+    "https://api.openweathermap.org/data/2.5/forecast";
 
-// ============================================
+// ==========================================
 // ELEMENTOS HTML
-// ============================================
+// ==========================================
 
-const formulario =
-    document.getElementById("formulario");
-
-
-const inputCiudad =
-    document.getElementById("inputCiudad");
-
-
-const resultado =
-    document.getElementById("resultado");
-
-
-const estado =
-    document.getElementById("estado");
-
-
-const btnUbicacion =
-    document.getElementById("btnUbicacion");
-
-
-const btnTema =
-    document.getElementById("btnTema");
-
-
-const pronostico =
-    document.getElementById("pronostico");
-
-
+const formulario = document.getElementById("formulario");
+const inputCiudad = document.getElementById("inputCiudad");
+const resultado = document.getElementById("resultado");
+const estado = document.getElementById("estado");
+const btnUbicacion = document.getElementById("btnUbicacion");
+const btnTema = document.getElementById("btnTema");
+const pronostico = document.getElementById("pronostico");
 const tarjetasPronostico =
     document.getElementById("tarjetasPronostico");
-
-
 const seccionHistorial =
     document.getElementById("seccionHistorial");
-
-
 const historialBotones =
     document.getElementById("historialBotones");
 
+// ==========================================
+// RETO 3: HISTORIAL DE CINCO CIUDADES
+// ==========================================
 
-// ============================================
-// RETO 3
-// HISTORIAL DE CIUDADES
-// ============================================
+let historial = [];
 
-let historial =
-    JSON.parse(
-        localStorage.getItem("historialClima")
-    ) || [];
-
-
-function guardarEnHistorial(ciudad) {
-
-    ciudad = ciudad.trim();
-
-
-    historial =
-        historial.filter(
-            item =>
-                item.toLowerCase() !==
-                ciudad.toLowerCase()
-        );
-
-
-    historial.unshift(ciudad);
-
-
-    historial =
-        historial.slice(0, 5);
-
-
-    localStorage.setItem(
-        "historialClima",
-        JSON.stringify(historial)
+try {
+    historial = JSON.parse(
+        localStorage.getItem("historialClima") || "[]"
     );
 
+    if (!Array.isArray(historial)) {
+        historial = [];
+    }
+} catch {
+    historial = [];
+}
+
+function guardarEnHistorial(ciudad) {
+    historial = historial.filter(
+        item => item.toLowerCase() !== ciudad.toLowerCase()
+    );
+
+    historial.unshift(ciudad);
+    historial = historial.slice(0, 5);
+
+    try {
+        localStorage.setItem(
+            "historialClima",
+            JSON.stringify(historial)
+        );
+    } catch (error) {
+        console.error("No se pudo guardar el historial", error);
+    }
 
     mostrarHistorial();
 }
 
-
 function mostrarHistorial() {
+    historialBotones.replaceChildren();
 
-    historialBotones.innerHTML = "";
-
-
-    if (historial.length === 0) {
-
-        seccionHistorial.hidden = true;
-
-        return;
-    }
-
-
-    seccionHistorial.hidden = false;
-
+    seccionHistorial.hidden = historial.length === 0;
 
     historial.forEach(ciudad => {
+        const boton = document.createElement("button");
+        boton.type = "button";
+        boton.textContent = "🌎 " + ciudad;
 
-        const boton =
-            document.createElement("button");
-
-
-        boton.textContent =
-            "🌎 " + ciudad;
-
-
-        boton.addEventListener(
-            "click",
-            function () {
-
-                inputCiudad.value = ciudad;
-
-                consultarClima(ciudad);
-
-            }
-        );
-
+        boton.addEventListener("click", () => {
+            inputCiudad.value = ciudad;
+            consultarClima(ciudad);
+        });
 
         historialBotones.appendChild(boton);
-
     });
 }
 
-
-// ============================================
+// ==========================================
 // CONSULTAR CLIMA
-// ============================================
+// ==========================================
 
 async function consultarClima(ciudad) {
+    ciudad = ciudad.trim();
 
-    if (
-        !API_KEY ||
-        API_KEY === "TU_API_KEY_NUEVA"
-    ) {
-
-        estado.textContent =
-            "❌ Coloca tu API Key en script.js.";
-
+    if (!ciudad) {
+        estado.textContent = "Escribe una ciudad.";
         return;
     }
 
+    if (!API_KEY || API_KEY === "TU_API_KEY_NUEVA") {
+        estado.textContent = "Configura tu API Key en script.js.";
+        return;
+    }
 
-    estado.textContent =
-        "⏳ Consultando el clima...";
-
-
+    estado.textContent = "⏳ Consultando el clima...";
     resultado.hidden = true;
-
     pronostico.hidden = true;
 
-
     try {
+        const parametros = new URLSearchParams({
+            q: ciudad,
+            appid: API_KEY,
+            units: "metric",
+            lang: "es"
+        });
 
-        const ciudadCodificada =
-            encodeURIComponent(ciudad);
-
-
-        const url =
-            `${API_URL}?q=${ciudadCodificada}` +
-            `&appid=${API_KEY}` +
-            `&units=metric` +
-            `&lang=es`;
-
-
-        const respuesta =
-            await fetch(url);
-
+        const respuesta = await fetch(`${API_URL}?${parametros}`);
+        const datos = await respuesta.json();
 
         if (!respuesta.ok) {
-
-            const errorAPI =
-                await respuesta.json();
-
-
-            console.log(
-                "Error de OpenWeatherMap:",
-                errorAPI
-            );
-
-
-            if (respuesta.status === 404) {
-
-                throw new Error(
-                    "Ciudad no encontrada"
-                );
-            }
-
-
-            if (respuesta.status === 401) {
-
-                throw new Error(
-                    "La API Key no fue aceptada"
-                );
-            }
-
-
-            if (respuesta.status === 429) {
-
-                throw new Error(
-                    "Demasiadas solicitudes"
-                );
-            }
-
-
             throw new Error(
-                errorAPI.message ||
-                `Error HTTP ${respuesta.status}`
+                datos.message || `Error HTTP ${respuesta.status}`
             );
         }
-
-
-        const datos =
-            await respuesta.json();
-
 
         mostrarClima(datos);
+        guardarEnHistorial(datos.name);
+        estado.textContent = "✅ Clima actualizado.";
 
+        // El pronóstico falla por separado sin ocultar el clima actual.
+        try {
+            await mostrarPronostico(datos.name);
+        } catch (error) {
+            console.error("Error en el pronóstico:", error);
+            pronostico.hidden = true;
+            estado.textContent =
+                "✅ Clima actual cargado. No se pudo cargar el pronóstico.";
+        }
 
-        await mostrarPronostico(
-            datos.name
-        );
+    } catch (error) {
+        console.error("Error al consultar:", error);
 
-
-        guardarEnHistorial(
-            datos.name
-        );
-
-
-        estado.textContent =
-            "✅ Datos actualizados correctamente.";
-
+        if (error.message.toLowerCase().includes("city not found")) {
+            estado.textContent = "❌ Ciudad no encontrada. Prueba otro nombre.";
+        } else if (error.message.toLowerCase().includes("invalid api key")) {
+            estado.textContent =
+                "❌ API Key no válida o todavía no activada.";
+        } else {
+            estado.textContent = "❌ " + error.message;
+        }
     }
-
-
-    catch (error) {
-
-        console.error(error);
-
-
-        estado.textContent =
-            "❌ " + error.message;
-
-
-        resultado.hidden = true;
-
-        pronostico.hidden = true;
-
-    }
-
 }
 
-
-// ============================================
+// ==========================================
 // MOSTRAR CLIMA ACTUAL
-// ============================================
+// ==========================================
 
 function mostrarClima(datos) {
+    const ciudad = datos.name;
+    const pais = datos.sys.country;
+    const temperatura = Math.round(datos.main.temp);
+    const sensacion = Math.round(datos.main.feels_like);
+    const humedad = datos.main.humidity;
+    const viento = datos.wind.speed;
+    const presion = datos.main.pressure;
+    const descripcion = datos.weather[0].description;
+    const icono = datos.weather[0].icon;
 
-    const ciudad =
-        datos.name;
+    resultado.replaceChildren();
 
+    const titulo = document.createElement("div");
+    titulo.className = "ciudad";
+    titulo.textContent = ciudad;
 
-    const pais =
-        datos.sys.country;
+    const paisTexto = document.createElement("div");
+    paisTexto.className = "pais";
+    paisTexto.textContent = "🌎 " + pais;
 
-
-    const temperatura =
-        Math.round(datos.main.temp);
-
-
-    const sensacion =
-        Math.round(datos.main.feels_like);
-
-
-    const humedad =
-        datos.main.humidity;
-
-
-    const presion =
-        datos.main.pressure;
-
-
-    const viento =
-        datos.wind.speed;
-
-
-    const descripcion =
-        datos.weather[0].description;
-
-
-    const icono =
-        datos.weather[0].icon;
-
-
-    const iconoURL =
+    const imagen = document.createElement("img");
+    imagen.className = "icono-clima";
+    imagen.alt = descripcion;
+    imagen.src =
         `https://openweathermap.org/img/wn/${icono}@2x.png`;
 
+    const temp = document.createElement("div");
+    temp.className = "temperatura";
+    temp.textContent = `${temperatura}°C`;
 
-    resultado.innerHTML = `
+    const desc = document.createElement("div");
+    desc.className = "descripcion";
+    desc.textContent = descripcion;
 
-        <div class="ciudad">
-            ${escapeHTML(ciudad)}
-        </div>
+    const detalles = document.createElement("div");
+    detalles.className = "detalles";
 
+    const datosExtra = [
+        ["Sensación", `${sensacion}°C`],
+        ["Humedad", `${humedad}%`],
+        ["Presión", `${presion} hPa`],
+        ["Viento", `${viento} m/s`]
+    ];
 
-        <div class="pais">
-            🌎 ${escapeHTML(pais)}
-        </div>
+    datosExtra.forEach(([etiqueta, valor]) => {
+        const tarjeta = document.createElement("div");
+        tarjeta.className = "detalle";
 
+        const nombre = document.createElement("div");
+        nombre.className = "etiqueta";
+        nombre.textContent = etiqueta;
 
-        <img
-            src="${iconoURL}"
-            alt="${escapeHTML(descripcion)}"
-            class="icono-clima"
-        >
+        const numero = document.createElement("div");
+        numero.className = "valor";
+        numero.textContent = valor;
 
+        tarjeta.append(nombre, numero);
+        detalles.appendChild(tarjeta);
+    });
 
-        <div class="temperatura">
-            ${temperatura}°C
-        </div>
+    const compartir = document.createElement("button");
+    compartir.type = "button";
+    compartir.className = "btn-whatsapp";
+    compartir.textContent = "📲 Compartir por WhatsApp";
 
+    compartir.addEventListener("click", () => {
+        compartirWhatsApp(ciudad, temperatura, descripcion);
+    });
 
-        <div class="descripcion">
-            ${escapeHTML(descripcion)}
-        </div>
-
-
-        <div class="detalles">
-
-
-            <div class="detalle">
-
-                <div class="etiqueta">
-                    Sensación
-                </div>
-
-                <div class="valor">
-                    ${sensacion}°C
-                </div>
-
-            </div>
-
-
-            <div class="detalle">
-
-                <div class="etiqueta">
-                    Humedad
-                </div>
-
-                <div class="valor">
-                    ${humedad}%
-                </div>
-
-            </div>
-
-
-            <div class="detalle">
-
-                <div class="etiqueta">
-                    Presión
-                </div>
-
-                <div class="valor">
-                    ${presion} hPa
-                </div>
-
-            </div>
-
-
-            <div class="detalle">
-
-                <div class="etiqueta">
-                    Viento
-                </div>
-
-                <div class="valor">
-                    ${viento} m/s
-                </div>
-
-            </div>
-
-
-        </div>
-
-
-        <!-- RETO 5 -->
-
-        <button
-            type="button"
-            class="btn-whatsapp"
-            id="btnWhatsApp"
-        >
-            📲 Compartir por WhatsApp
-        </button>
-
-    `;
-
+    resultado.append(
+        titulo, paisTexto, imagen, temp, desc, detalles, compartir
+    );
 
     resultado.hidden = false;
-
-
-    cambiarFondoSegunClima(
-        datos.weather[0].main
-    );
-
-
-    document
-        .getElementById("btnWhatsApp")
-        .addEventListener(
-            "click",
-            function () {
-
-                compartirWhatsApp(
-                    ciudad,
-                    temperatura,
-                    descripcion
-                );
-
-            }
-        );
-
+    cambiarFondoSegunClima(datos.weather[0].main);
 }
 
-
-// ============================================
-// RETO 2
-// PRONÓSTICO DE 5 DÍAS
-// ============================================
+// ==========================================
+// RETO 2: PRONÓSTICO DE CINCO DÍAS
+// ==========================================
 
 async function mostrarPronostico(ciudad) {
+    const parametros = new URLSearchParams({
+        q: ciudad,
+        appid: API_KEY,
+        units: "metric",
+        lang: "es"
+    });
 
-    const ciudadCodificada =
-        encodeURIComponent(ciudad);
-
-
-    const url =
-        `${FORECAST_URL}?q=${ciudadCodificada}` +
-        `&appid=${API_KEY}` +
-        `&units=metric` +
-        `&lang=es`;
-
-
-    const respuesta =
-        await fetch(url);
-
+    const respuesta = await fetch(`${FORECAST_URL}?${parametros}`);
+    const datos = await respuesta.json();
 
     if (!respuesta.ok) {
-
         throw new Error(
-            "No se pudo cargar el pronóstico"
+            datos.message || "No se pudo cargar el pronóstico"
         );
-
     }
 
-
-    const datos =
-        await respuesta.json();
-
-
-    const porDia = {};
-
+    // Seleccionamos una previsión cercana al mediodía por cada día.
+    const porDia = new Map();
 
     datos.list.forEach(item => {
+        const fecha = item.dt_txt.split(" ")[0];
+        const hora = Number(item.dt_txt.split(" ")[1].slice(0, 2));
 
-        const fecha =
-            item.dt_txt.split(" ")[0];
-
-
-        if (!porDia[fecha]) {
-
-            porDia[fecha] = item;
-
+        if (!porDia.has(fecha)) {
+            porDia.set(fecha, item);
         }
 
+        const anterior = porDia.get(fecha);
+        const horaAnterior =
+            Number(anterior.dt_txt.split(" ")[1].slice(0, 2));
+
+        if (Math.abs(hora - 12) < Math.abs(horaAnterior - 12)) {
+            porDia.set(fecha, item);
+        }
     });
 
-
-    const dias =
-        Object.values(porDia).slice(0, 5);
-
-
-    tarjetasPronostico.innerHTML = "";
-
+    const dias = [...porDia.values()].slice(0, 5);
+    tarjetasPronostico.replaceChildren();
 
     dias.forEach(item => {
+        const tarjeta = document.createElement("div");
+        tarjeta.className = "tarjeta-dia";
 
-        const fecha =
-            new Date(item.dt * 1000);
+        const fecha = document.createElement("div");
+        fecha.className = "fecha";
+        fecha.textContent = new Date(item.dt * 1000)
+            .toLocaleDateString("es-MX", {
+                weekday: "short",
+                day: "2-digit",
+                month: "2-digit"
+            });
 
+        const imagen = document.createElement("img");
+        imagen.alt = item.weather[0].description;
+        imagen.src =
+            `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`;
 
-        const nombreDia =
-            fecha.toLocaleDateString(
-                "es-MX",
-                {
-                    weekday: "short"
-                }
-            );
+        const temperatura = document.createElement("div");
+        temperatura.className = "temp";
+        temperatura.textContent =
+            `${Math.round(item.main.temp)}°C`;
 
+        const descripcion = document.createElement("div");
+        descripcion.className = "desc";
+        descripcion.textContent = item.weather[0].description;
 
-        const fechaCorta =
-            fecha.toLocaleDateString(
-                "es-MX",
-                {
-                    day: "2-digit",
-                    month: "2-digit"
-                }
-            );
-
-
-        const temperatura =
-            Math.round(item.main.temp);
-
-
-        const descripcion =
-            item.weather[0].description;
-
-
-        const icono =
-            item.weather[0].icon;
-
-
-        const tarjeta =
-            document.createElement("div");
-
-
-        tarjeta.className =
-            "tarjeta-dia";
-
-
-        tarjeta.innerHTML = `
-
-            <div class="fecha">
-
-                ${nombreDia}<br>
-
-                ${fechaCorta}
-
-            </div>
-
-
-            <img
-                src="https://openweathermap.org/img/wn/${icono}@2x.png"
-                alt="${escapeHTML(descripcion)}"
-            >
-
-
-            <div class="temp">
-                ${temperatura}°C
-            </div>
-
-
-            <div class="desc">
-                ${escapeHTML(descripcion)}
-            </div>
-
-        `;
-
-
-        tarjetasPronostico.appendChild(
-            tarjeta
-        );
-
+        tarjeta.append(fecha, imagen, temperatura, descripcion);
+        tarjetasPronostico.appendChild(tarjeta);
     });
 
-
     pronostico.hidden = false;
-
 }
 
+// ==========================================
+// RETO 1: MI UBICACIÓN
+// ==========================================
 
-// ============================================
-// RETO 1
-// MI UBICACIÓN
-// ============================================
+btnUbicacion.addEventListener("click", () => {
+    if (!navigator.geolocation) {
+        estado.textContent = "Tu navegador no admite geolocalización.";
+        return;
+    }
 
-btnUbicacion.addEventListener(
-    "click",
-    function () {
+    if (!API_KEY || API_KEY === "TU_API_KEY_NUEVA") {
+        estado.textContent = "Configura tu API Key en script.js.";
+        return;
+    }
 
-        if (!navigator.geolocation) {
+    estado.textContent = "📍 Solicitando permiso de ubicación...";
 
-            estado.textContent =
-                "❌ Tu navegador no permite geolocalización.";
+    navigator.geolocation.getCurrentPosition(
+        async posicion => {
+            try {
+                const parametros = new URLSearchParams({
+                    lat: posicion.coords.latitude,
+                    lon: posicion.coords.longitude,
+                    appid: API_KEY,
+                    units: "metric",
+                    lang: "es"
+                });
 
-            return;
-        }
+                const respuesta =
+                    await fetch(`${API_URL}?${parametros}`);
+                const datos = await respuesta.json();
 
+                if (!respuesta.ok) {
+                    throw new Error(
+                        datos.message || "No se pudo obtener el clima"
+                    );
+                }
 
-        estado.textContent =
-            "📍 Obteniendo tu ubicación...";
-
-
-        navigator.geolocation.getCurrentPosition(
-
-            async function (posicion) {
-
-                const lat =
-                    posicion.coords.latitude;
-
-
-                const lon =
-                    posicion.coords.longitude;
-
+                mostrarClima(datos);
+                guardarEnHistorial(datos.name);
+                estado.textContent = "📍 Clima de tu ubicación cargado.";
 
                 try {
-
-                    const url =
-                        `${API_URL}?lat=${lat}` +
-                        `&lon=${lon}` +
-                        `&appid=${API_KEY}` +
-                        `&units=metric` +
-                        `&lang=es`;
-
-
-                    const respuesta =
-                        await fetch(url);
-
-
-                    if (!respuesta.ok) {
-
-                        throw new Error(
-                            "No se pudo obtener el clima"
-                        );
-
-                    }
-
-
-                    const datos =
-                        await respuesta.json();
-
-
-                    mostrarClima(datos);
-
-
-                    await mostrarPronostico(
-                        datos.name
-                    );
-
-
-                    guardarEnHistorial(
-                        datos.name
-                    );
-
-
-                    estado.textContent =
-                        "📍 Clima obtenido de tu ubicación.";
-
-                }
-
-
-                catch (error) {
-
+                    await mostrarPronostico(datos.name);
+                } catch (error) {
                     console.error(error);
-
-
                     estado.textContent =
-                        "❌ " + error.message;
-
+                        "Clima cargado; el pronóstico no está disponible.";
                 }
 
-            },
-
-
-            function (error) {
-
-                console.error(error);
-
-
-                if (error.code === 1) {
-
-                    estado.textContent =
-                        "❌ Permiso de ubicación denegado.";
-
-                }
-
-                else {
-
-                    estado.textContent =
-                        "❌ No se pudo obtener tu ubicación.";
-
-                }
-
+            } catch (error) {
+                estado.textContent = "❌ " + error.message;
             }
+        },
+        error => {
+            if (error.code === 1) {
+                estado.textContent =
+                    "Permite la ubicación en el navegador para usar esta función.";
+            } else if (error.code === 2) {
+                estado.textContent =
+                    "No se pudo determinar tu ubicación.";
+            } else {
+                estado.textContent =
+                    "Se agotó el tiempo para obtener tu ubicación.";
+            }
+        },
+        { enableHighAccuracy: false, timeout: 15000 }
+    );
+});
 
-        );
+// ==========================================
+// RETO 4: MODO CLARO Y OSCURO
+// ==========================================
 
+function aplicarTema(tema) {
+    const claro = tema === "claro";
+    document.body.classList.toggle("claro", claro);
+    btnTema.textContent = claro ? "🌙 Modo oscuro" : "☀️ Modo claro";
+
+    try {
+        localStorage.setItem("temaClima", claro ? "claro" : "oscuro");
+    } catch (error) {
+        console.error("No se pudo guardar el tema", error);
     }
-);
-
-
-// ============================================
-// RETO 4
-// MODO CLARO / OSCURO
-// ============================================
-
-btnTema.addEventListener(
-    "click",
-    function () {
-
-        document.body.classList.toggle(
-            "claro"
-        );
-
-
-        const modoClaro =
-            document.body.classList.contains(
-                "claro"
-            );
-
-
-        if (modoClaro) {
-
-            btnTema.textContent =
-                "🌙 Modo oscuro";
-
-
-            localStorage.setItem(
-                "temaClima",
-                "claro"
-            );
-
-        }
-
-        else {
-
-            btnTema.textContent =
-                "☀️ Modo claro";
-
-
-            localStorage.setItem(
-                "temaClima",
-                "oscuro"
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================
-// CARGAR TEMA
-// ============================================
-
-function cargarTema() {
-
-    const tema =
-        localStorage.getItem(
-            "temaClima"
-        );
-
-
-    if (tema === "claro") {
-
-        document.body.classList.add(
-            "claro"
-        );
-
-
-        btnTema.textContent =
-            "🌙 Modo oscuro";
-
-    }
-
-    else {
-
-        btnTema.textContent =
-            "☀️ Modo claro";
-
-    }
-
 }
 
+btnTema.addEventListener("click", () => {
+    const esClaro = document.body.classList.contains("claro");
+    aplicarTema(esClaro ? "oscuro" : "claro");
+});
 
-// ============================================
-// RETO 5
-// COMPARTIR POR WHATSAPP
-// ============================================
+// ==========================================
+// RETO 5: COMPARTIR POR WHATSAPP
+// ==========================================
 
-function compartirWhatsApp(
-    ciudad,
-    temperatura,
-    descripcion
-) {
-
+function compartirWhatsApp(ciudad, temperatura, descripcion) {
     const texto =
-        `🌤️ El clima en ${ciudad} ` +
-        `es de ${temperatura}°C. ` +
+        `🌤️ El clima en ${ciudad} es de ${temperatura}°C. ` +
         `Condición: ${descripcion}.`;
 
-
-    const url =
-        "https://wa.me/?text=" +
-        encodeURIComponent(texto);
-
-
-    window.open(
-        url,
-        "_blank"
-    );
-
+    const url = "https://wa.me/?text=" + encodeURIComponent(texto);
+    window.open(url, "_blank", "noopener,noreferrer");
 }
 
-
-// ============================================
-// CAMBIAR FONDO SEGÚN CLIMA
-// ============================================
+// ==========================================
+// FONDO SEGÚN EL CLIMA
+// ==========================================
 
 function cambiarFondoSegunClima(clima) {
-
     document.body.classList.remove(
         "clima-soleado",
         "clima-nublado",
@@ -831,121 +428,51 @@ function cambiarFondoSegunClima(clima) {
         "clima-nieve"
     );
 
+    // No cambiamos el fondo si el usuario eligió el modo claro.
+    if (document.body.classList.contains("claro")) return;
 
-    const climaLower =
-        clima.toLowerCase();
+    const tipo = clima.toLowerCase();
 
-
-    if (
-        climaLower.includes("clear")
+    if (tipo.includes("clear")) {
+        document.body.classList.add("clima-soleado");
+    } else if (tipo.includes("cloud")) {
+        document.body.classList.add("clima-nublado");
+    } else if (
+        tipo.includes("rain") ||
+        tipo.includes("drizzle") ||
+        tipo.includes("thunderstorm")
     ) {
-
-        document.body.classList.add(
-            "clima-soleado"
-        );
-
+        document.body.classList.add("clima-lluvioso");
+    } else if (tipo.includes("snow")) {
+        document.body.classList.add("clima-nieve");
     }
-
-
-    else if (
-        climaLower.includes("cloud")
-    ) {
-
-        document.body.classList.add(
-            "clima-nublado"
-        );
-
-    }
-
-
-    else if (
-        climaLower.includes("rain") ||
-        climaLower.includes("drizzle") ||
-        climaLower.includes("thunderstorm")
-    ) {
-
-        document.body.classList.add(
-            "clima-lluvioso"
-        );
-
-    }
-
-
-    else if (
-        climaLower.includes("snow")
-    ) {
-
-        document.body.classList.add(
-            "clima-nieve"
-        );
-
-    }
-
 }
 
+// ==========================================
+// FORMULARIO DE BÚSQUEDA
+// ==========================================
 
-// ============================================
-// FORMULARIO
-// ============================================
+formulario.addEventListener("submit", event => {
+    event.preventDefault();
+    consultarClima(inputCiudad.value);
+});
 
-formulario.addEventListener(
-    "submit",
-    function (event) {
+// ==========================================
+// INICIAR PÁGINA
+// ==========================================
 
-        event.preventDefault();
+function iniciar() {
+    mostrarHistorial();
 
+    let tema = "oscuro";
 
-        const ciudad =
-            inputCiudad.value.trim();
-
-
-        if (!ciudad) {
-
-            estado.textContent =
-                "⚠️ Escribe una ciudad.";
-
-
-            inputCiudad.focus();
-
-
-            return;
-
-        }
-
-
-        consultarClima(ciudad);
-
+    try {
+        tema = localStorage.getItem("temaClima") || "oscuro";
+    } catch (error) {
+        console.error(error);
     }
-);
 
-
-// ============================================
-// SEGURIDAD
-// ============================================
-
-function escapeHTML(texto) {
-
-    const div =
-        document.createElement("div");
-
-
-    div.textContent =
-        texto;
-
-
-    return div.innerHTML;
-
+    aplicarTema(tema);
 }
 
-
-// ============================================
-// INICIO
-// ============================================
-
-mostrarHistorial();
-
-cargarTema();
-
-
-estado.textContent =
-    'Escribe una ciudad y presiona "Consultar".';
+iniciar();
